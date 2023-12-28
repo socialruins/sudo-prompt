@@ -25,7 +25,7 @@ export function spawn(
         name?: string;
         icns?: string;
         env?: { [key: string]: string };
-        spawn?: { [key: string]: string };
+        spawn?: { [key: string]: any };
       },
   callback?: (
     error?: Error,

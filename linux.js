@@ -162,12 +162,10 @@ function Spawn(instance, binary, end) {
   const spawnRun = Node.child.spawn(command.cmd, command.args);
 
   spawnRun.stdout.on("data", (stdout) => {
-    //console.log(`stdout: ${data}`);
     end(stdout.toString());
   });
 
   spawnRun.stderr.on("data", (stderr) => {
-    //console.error(`stderr: ${data}`);
     end(stderr.toString());
   });
 
@@ -180,7 +178,6 @@ function Spawn(instance, binary, end) {
   });
 
   spawnRun.on("close", (code) => {
-    //console.log(`child process exited with code ${code}`);
     end(`child process exited with code ${code}`);
   });
 }

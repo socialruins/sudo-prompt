@@ -21,7 +21,8 @@ function Attempt(instance, end) {
   end(new Error("Platform not yet supported."));
 }
 
-function CheckInput(arguments) {
+function CheckInput(args) {
+  var arguments = args;
   var command = arguments[0];
   var options = {};
   var end = function () {};

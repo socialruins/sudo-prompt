@@ -154,7 +154,7 @@ function Execution(instance, binary, end) {
 
 function Spawn(instance, binary, end) {
   var command = PrepareSpawnCommand(instance, binary);
-  var spawnOptions = { cwd: undefined, env: process.env };
+  var spawnOptions = undefined;
   var detached = false;
   if (typeof instance.options.spawn !== "undefined") {
     spawnOptions = instance.options.spawn;
@@ -163,7 +163,7 @@ function Spawn(instance, binary, end) {
     }
   }
 
-  const spawnRun = Node.child.spawn(command.cmd, command.args);
+  const spawnRun = Node.child.spawn(command.cmd, command.args, spawnOptions);
 
   if (detached) {
     spawnRun.unref();

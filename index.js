@@ -22,36 +22,35 @@ function Attempt(instance, end) {
 }
 
 function CheckInput(args) {
-  var arguments = args;
-  var command = arguments[0];
+  var command = args[0];
   var options = {};
   var end = function () {};
   var platform = Node.process.platform;
   if (platform !== "darwin" && platform !== "linux" && platform !== "win32") {
     return end(new Error("Platform not yet supported."));
   }
-  if (arguments.length < 1 || arguments.length > 3) {
+  if (args.length < 1 || args.length > 3) {
     throw new Error("Wrong number of arguments.");
   }
   if (typeof command !== "string" && typeof command !== "object") {
     throw new Error("Command should be a string or an object.");
   }
-  if (arguments.length === 2) {
-    if (arguments[1] !== null && typeof arguments[1] === "object") {
-      options = arguments[1];
-    } else if (typeof arguments[1] === "function") {
-      end = arguments[1];
+  if (args.length === 2) {
+    if (args[1] !== null && typeof args[1] === "object") {
+      options = args[1];
+    } else if (typeof args[1] === "function") {
+      end = args[1];
     } else {
       throw new Error("Expected options or callback.");
     }
-  } else if (arguments.length === 3) {
-    if (arguments[1] !== null && typeof arguments[1] === "object") {
-      options = arguments[1];
+  } else if (args.length === 3) {
+    if (args[1] !== null && typeof args[1] === "object") {
+      options = args[1];
     } else {
       throw new Error("Expected options to be an object.");
     }
-    if (typeof arguments[2] === "function") {
-      end = arguments[2];
+    if (typeof args[2] === "function") {
+      end = args[2];
     } else {
       throw new Error("Expected callback to be a function.");
     }

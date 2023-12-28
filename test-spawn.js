@@ -19,8 +19,6 @@ function icns() {
 }
 
 kill(function () {
-  const out = fs.openSync("./out.log", "a");
-  const err = fs.openSync("./out.log", "a");
   var options = {
     env: { SUDO_PROMPT_TEST_ENV: "hello world" },
     icns: icns(),

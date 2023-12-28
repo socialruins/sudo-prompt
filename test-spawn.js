@@ -25,9 +25,7 @@ kill(function () {
     env: { SUDO_PROMPT_TEST_ENV: "hello world" },
     icns: icns(),
     name: "Electron",
-    spawn: {
-      options: undefined,
-    },
+    spawn: undefined,
   };
 
   var command = "echo test";

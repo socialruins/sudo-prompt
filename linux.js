@@ -155,8 +155,8 @@ function Execution(instance, binary, end) {
 function Spawn(instance, binary, end) {
   var command = PrepareSpawnCommand(instance, binary);
   var spawnOptions = { cwd: undefined, env: process.env };
-  if (typeof instance.options.spawn.options !== "undefined") {
-    spawnOptions = instance.options.spawn.options;
+  if (typeof instance.options.spawn !== "undefined") {
+    spawnOptions = instance.options.spawn;
   }
 
   const spawnRun = Node.child.spawn(command.cmd, command.args);

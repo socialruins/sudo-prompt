@@ -155,31 +155,40 @@ function Execution(instance, binary, end) {
 function Spawn(instance, binary, end) {
   var command = PrepareSpawnCommand(instance, binary);
   var spawnOptions = { cwd: undefined, env: process.env };
+  var detached = false;
   if (typeof instance.options.spawn !== "undefined") {
     spawnOptions = instance.options.spawn;
+    if (typeof instance.options.spawn.detached !== "undefined") {
+      detached = instance.options.spawn.detached;
+    }
   }
 
   const spawnRun = Node.child.spawn(command.cmd, command.args);
 
-  spawnRun.stdout.on("data", (stdout) => {
-    end(stdout.toString());
-  });
+  if (detached) {
+    spawnRun.unref();
+    end("Process spawned and detached.");
+  } else {
+    spawnRun.stdout.on("data", (stdout) => {
+      end(stdout.toString());
+    });
 
-  spawnRun.stderr.on("data", (stderr) => {
-    end(stderr.toString());
-  });
+    spawnRun.stderr.on("data", (stderr) => {
+      end(stderr.toString());
+    });
 
-  spawnRun.on("message", (msg) => {
-    end(msg);
-  });
+    spawnRun.on("message", (msg) => {
+      end(msg);
+    });
 
-  spawnRun.on("error", (err) => {
-    end(err);
-  });
+    spawnRun.on("error", (err) => {
+      end(err);
+    });
 
-  spawnRun.on("close", (code) => {
-    end(`child process exited with code ${code}`);
-  });
+    spawnRun.on("close", (code) => {
+      end(`child process exited with code ${code}`);
+    });
+  }
 }
 
 function Linux(instance, end) {

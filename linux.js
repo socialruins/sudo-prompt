@@ -166,8 +166,15 @@ function Spawn(instance, binary, end) {
   const spawnRun = Node.child.spawn(command.cmd, command.args, spawnOptions);
 
   if (detached) {
+    spawnRun.stdout.on("data", (stdout) => {
+      end("Process spawned and detached.");
+    });
+
+    spawnRun.on("close", (code) => {
+      end(`child process exited with code ${code}`);
+    });
+
     spawnRun.unref();
-    end("Process spawned and detached.");
   } else {
     spawnRun.stdout.on("data", (stdout) => {
       end(stdout.toString());

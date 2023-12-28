@@ -4,14 +4,22 @@
   "description": "Run a command using sudo, prompting the user with an OS dialog if necessary",
   "main": "index.js",
   "types": "index.d.ts",
+  "type": "commonjs",
   "files": [
     "LICENSE",
     "README.md",
     "index.d.ts",
     "index.js",
+    "constants.js",
+    "linux.js",
+    "mac.js",
+    "windows.js",
+    "utils.js",
     "package.json",
     "test.js",
-    "test-concurrent.js"
+    "test-concurrent.js",
+    "test-array.js",
+    "test-spawn.js"
   ],
   "repository": {
     "type": "git",

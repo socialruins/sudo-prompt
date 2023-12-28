@@ -23,14 +23,15 @@ kill(function () {
     env: { SUDO_PROMPT_TEST_ENV: "hello world" },
     icns: icns(),
     name: "Electron",
+    operator: "&&",
   };
   if (process.platform === "win32") {
     var command = "echo %SUDO_PROMPT_TEST_ENV%";
     var expected = "hello world\r\n";
   } else {
     // We use double quotes to tell echo to preserve internal space:
-    var command = 'echo "$SUDO_PROMPT_TEST_ENV"';
-    var expected = "hello world\n";
+    var command = ["echo hello", "sleep 10 && echo world"];
+    var expected = "hello\nworld\n";
   }
   console.log(
     "sudo.exec(" +

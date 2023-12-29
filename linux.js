@@ -185,7 +185,7 @@ function Spawn(instance, binary, end) {
   if (detached) {
     var pid = spawnRun.pid;
     spawnRun.on("close", (code) => {
-      if (code !== 0) {
+      if (code !== 0 && code !== null) {
         end(`Spawn process exited with code ${code}`, stdout, spawnRun.stderr);
       }
     });

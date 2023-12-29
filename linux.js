@@ -231,7 +231,7 @@ function Spawn(instance, binary, end) {
         } else {
           clearTimeout(timerId);
           spawnRun.stdout.end();
-          //spawnRun.stderr.end();
+          spawnRun.stderr.end();
           spawnRun.unref();
           end(`Spawned child pid: ${spawnRun.pid}`);
         }

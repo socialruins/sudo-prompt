@@ -183,8 +183,6 @@ function Spawn(instance, binary, end) {
   });
 
   if (detached) {
-    spawnRun.unref();
-
     spawnRun.on("close", (code) => {
       if (code !== 0) {
         end(
@@ -196,6 +194,7 @@ function Spawn(instance, binary, end) {
         end(`Spawned process ${spawnRun.pid}`);
       }
     });
+    spawnRun.unref();
   } else {
     spawnRun.stdout.on("data", (data) => {
       end(data.toString());

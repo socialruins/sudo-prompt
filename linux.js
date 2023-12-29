@@ -186,16 +186,13 @@ function Spawn(instance, binary, end) {
     var pid = spawnRun.pid;
     spawnRun.on("close", (code) => {
       if (code !== 0) {
-        end(
-          new Error(`Spawn process exited with code ${code}`),
-          stdout,
-          spawnRun.stderr,
-        );
+        end(`Spawn process exited with code ${code}`, stdout, spawnRun.stderr);
       }
     });
-
-    spawnRun.unref();
-    end(`Spawned process ${pid}`);
+    spawnRun.stdout.on("data", (data) => {
+      spawnRun.unref();
+      end(`Spawned process ${pid}`);
+    });
   } else {
     spawnRun.stdout.on("data", (data) => {
       end(data.toString());

@@ -190,9 +190,11 @@ function Spawn(instance, binary, end) {
           stdout,
           spawnRun.stderr,
         );
-      } else {
-        end(`Spawned process ${spawnRun.pid}`);
       }
+    });
+    //Read stdout since sometimes spawned processes are meant for long running programs...
+    spawnRun.stdout.on("data", (data) => {
+      end(`Spawned process ${spawnRun.pid}`);
     });
     spawnRun.unref();
   } else {

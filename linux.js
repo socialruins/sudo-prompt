@@ -165,35 +165,50 @@ function Spawn(instance, binary, end) {
 
   const spawnRun = Node.child.spawn(command.cmd, command.args, spawnOptions);
 
+  var stdout;
+  var elevated =
+    spawnRun.stdout &&
+    spawnRun.stdout.toString().slice(0, magic.length) === magic;
+  if (elevated) stdout = spawnRun.stdout.toString().slice(magic.length);
+
+  spawnRun.on("error", (error) => {
+    if (!elevated) {
+      if (/No authentication agent found/.test(spawnRun.stderr)) {
+        error.message = NO_POLKIT_AGENT;
+      } else {
+        error.message = PERMISSION_DENIED;
+      }
+    }
+    end(error, stdout, spawnRun.stderr);
+  });
+
   if (detached) {
-    spawnRun.stdout.on("data", (stdout) => {
-      end("Process spawned and detached.");
-    });
-
-    spawnRun.on("close", (code) => {
-      end(`child process exited with code ${code}`);
-    });
-
     spawnRun.unref();
+
+    spawnRun.on("close", (code) => {
+      if (code !== 0) {
+        end(
+          new Error(`Spawn process exited with code ${code}`),
+          stdout,
+          spawnRun.stderr,
+        );
+      } else {
+        end(`Spawned process ${spawnRun.pid}`);
+      }
+    });
   } else {
-    spawnRun.stdout.on("data", (stdout) => {
-      end(stdout.toString());
+    spawnRun.stdout.on("data", (data) => {
+      end(data.toString());
     });
 
-    spawnRun.stderr.on("data", (stderr) => {
-      end(stderr.toString());
-    });
-
-    spawnRun.on("message", (msg) => {
-      end(msg);
-    });
-
-    spawnRun.on("error", (err) => {
-      end(err);
+    spawnRun.stderr.on("data", (data) => {
+      end(data.toString());
     });
 
     spawnRun.on("close", (code) => {
-      end(`child process exited with code ${code}`);
+      if (code !== 0) {
+        end(`Spawn process exited with code ${code}`);
+      }
     });
   }
 }

@@ -183,6 +183,7 @@ function Spawn(instance, binary, end) {
   });
 
   if (detached) {
+    var pid = spawnRun.pid;
     spawnRun.on("close", (code) => {
       if (code !== 0) {
         end(
@@ -192,11 +193,9 @@ function Spawn(instance, binary, end) {
         );
       }
     });
-    //Read stdout since sometimes spawned processes are meant for long running programs...
-    spawnRun.stdout.on("data", (data) => {
-      end(`Spawned process ${spawnRun.pid}`);
-    });
+
     spawnRun.unref();
+    end(`Spawned process ${pid}`);
   } else {
     spawnRun.stdout.on("data", (data) => {
       end(data.toString());

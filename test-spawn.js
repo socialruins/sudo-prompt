@@ -23,7 +23,8 @@ kill(function () {
     env: { SUDO_PROMPT_TEST_ENV: "hello world" },
     icns: icns(),
     name: "Electron",
-    spawn: { detached: true, stdio: ["ignore", "pipe", process.stderr] },
+    //spawn: { detached: true, stdio: ["ignore"] },
+    spawn: { detached: true, stdio: ["ignore", "pipe", "pipe"] },
   };
 
   var command = "echo test";

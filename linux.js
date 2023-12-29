@@ -13,10 +13,12 @@ const {
   MAX_BUFFER,
   PERMISSION_DENIED,
   NO_POLKIT_AGENT,
+  USER_PROMPT_TIMEOUT,
   OPERATOR,
+  DELAY,
+  LIMIT,
+  MAGIC,
 } = require("./constants");
-
-const magic = "SUDOPROMPT\n";
 
 function PrepareExecCommand(instance, binary) {
   var command = [];
@@ -46,7 +48,7 @@ function PrepareExecCommand(instance, binary) {
     command.push("--disable-internal-agent");
   }
 
-  var instanceCmd = `/bin/bash -c "echo ${EscapeDoubleQuotes(magic.trim())}; `;
+  var instanceCmd = `/bin/bash -c "echo ${EscapeDoubleQuotes(MAGIC.trim())}; `;
 
   if (typeof instance.command === "string") {
     instanceCmd += EscapeDoubleQuotes(instance.command);
@@ -90,7 +92,7 @@ function PrepareSpawnCommand(instance, binary) {
   args.push("/bin/bash");
   args.push("-c");
 
-  var instanceCmd = `echo ${EscapeDoubleQuotes(magic.trim())}; `;
+  var instanceCmd = `echo ${EscapeDoubleQuotes(MAGIC.trim())}; `;
   if (typeof instance.command === "string") {
     instanceCmd += EscapeDoubleQuotes(instance.command);
   } else if (typeof instance.command === "object") {
@@ -134,8 +136,8 @@ function Execution(instance, binary, end) {
       //
       // However, we do not rely on pkexec's return of 127 since our magic
       // marker is more reliable, and we already use it for kdesudo.
-      var elevated = stdout && stdout.slice(0, magic.length) === magic;
-      if (elevated) stdout = stdout.slice(magic.length);
+      var elevated = stdout && stdout.slice(0, MAGIC.length) === MAGIC;
+      if (elevated) stdout = stdout.slice(MAGIC.length);
       // Only normalize the error if it is definitely not a command error:
       // In other words, if we know that the command was never elevated.
       // We do not inspect error messages beyond NO_POLKIT_AGENT.
@@ -152,61 +154,89 @@ function Execution(instance, binary, end) {
   );
 }
 
+function SetStdioOption(stdio) {
+  //stdio options: stdin, stdout, and stderr
+  // gotta set it pipe to get the prompt... sorry.
+  // gotta get the error output, sorry.
+  if (typeof stdio === "string") {
+    return [stdio, "pipe", "pipe"];
+  }
+  if (typeof stdio === "object") {
+    return [stdio[0], "pipe", "pipe"];
+  }
+}
+
 function Spawn(instance, binary, end) {
+  // https://nodejs.org/api/child_process.html#optionsdetached
   var command = PrepareSpawnCommand(instance, binary);
   var spawnOptions = undefined;
+  var stdioOptions = undefined;
   var detached = false;
+  var elevated = false;
+  var hasError = false;
   if (typeof instance.options.spawn !== "undefined") {
     spawnOptions = instance.options.spawn;
     if (typeof instance.options.spawn.detached !== "undefined") {
       detached = instance.options.spawn.detached;
     }
+    if (typeof instance.options.spawn.stdio !== "undefined") {
+      stdioOptions = SetStdioOption(instance.options.spawn.stdio);
+    }
   }
 
   const spawnRun = Node.child.spawn(command.cmd, command.args, spawnOptions);
 
-  var stdout;
-  var elevated =
-    spawnRun.stdout &&
-    spawnRun.stdout.toString().slice(0, magic.length) === magic;
-  if (elevated) stdout = spawnRun.stdout.toString().slice(magic.length);
-
-  spawnRun.on("error", (error) => {
-    if (!elevated) {
-      if (/No authentication agent found/.test(spawnRun.stderr)) {
-        error.message = NO_POLKIT_AGENT;
-      } else {
-        error.message = PERMISSION_DENIED;
-      }
+  spawnRun.stdout.on("data", (res) => {
+    var response = res.toString();
+    if (response.slice(0, MAGIC.length) === MAGIC) {
+      elevated = true;
+      response = response.slice(MAGIC.length);
     }
-    end(error, stdout, spawnRun.stderr);
+
+    if (elevated && !detached) {
+      end(response);
+    }
+  });
+
+  spawnRun.stderr.on("data", (err) => {
+    hasError = true;
+    var error = err.toString();
+    var message = "";
+    //assuming that elevation did not happen...
+    if (/No authentication agent found/.test(error)) {
+      message = NO_POLKIT_AGENT;
+    } else {
+      message = PERMISSION_DENIED;
+    }
+    end(message);
   });
 
   if (detached) {
-    var pid = spawnRun.pid;
-    spawnRun.on("close", (code) => {
-      if (code !== 0 && code !== null) {
-        end(`Spawn process exited with code ${code}`, stdout, spawnRun.stderr);
+    let i = 1;
+    let timerId = setTimeout(function request() {
+      //check if error, or user just simply cancels prompt.
+      if (!hasError) {
+        //check elevated
+        if (!elevated) {
+          // rerun the countdown until user gets elevated or timeout occurs.
+          i++;
+          // Check the limiter
+          if (i >= LIMIT) {
+            clearTimeout(timerId);
+            spawnRun.kill();
+            end(USER_PROMPT_TIMEOUT);
+          } else {
+            timerId = setTimeout(request, DELAY);
+          }
+        } else {
+          clearTimeout(timerId);
+          spawnRun.stdout.end();
+          spawnRun.stderr.end();
+          spawnRun.unref();
+          end(`Spawned child pid: ${spawnRun.pid}`);
+        }
       }
-    });
-    spawnRun.stdout.on("data", (data) => {
-      spawnRun.unref();
-      end(`Spawned process ${pid}`);
-    });
-  } else {
-    spawnRun.stdout.on("data", (data) => {
-      end(data.toString());
-    });
-
-    spawnRun.stderr.on("data", (data) => {
-      end(data.toString());
-    });
-
-    spawnRun.on("close", (code) => {
-      if (code !== 0) {
-        end(`Spawn process exited with code ${code}`);
-      }
-    });
+    }, DELAY);
   }
 }
 

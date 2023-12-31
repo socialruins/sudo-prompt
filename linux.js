@@ -171,6 +171,7 @@ function Spawn(instance, binary, end) {
   var command = PrepareSpawnCommand(instance, binary);
   var spawnOptions = undefined;
   var stdioOptions = undefined;
+  var keepOpen = true; // keep the stdout open for data stream
   var detached = false;
   var elevated = false;
   var hasError = false;
@@ -181,6 +182,9 @@ function Spawn(instance, binary, end) {
     }
     if (typeof instance.options.spawn.stdio !== "undefined") {
       stdioOptions = SetStdioOption(instance.options.spawn.stdio);
+    }
+    if (typeof instance.options.spawn.keepOpen !== "undefined") {
+      keepOpen = instance.options.spawn.keepOpen;
     }
   }
 
@@ -193,7 +197,7 @@ function Spawn(instance, binary, end) {
       response = response.slice(MAGIC.length);
     }
 
-    if (elevated && !detached) {
+    if ((elevated && !detached) || (elevated && keepOpen)) {
       end(response);
     }
   });

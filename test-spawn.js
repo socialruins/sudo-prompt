@@ -24,7 +24,7 @@ kill(function () {
     icns: icns(),
     name: "Electron",
     //spawn: { detached: true, stdio: ["ignore"] },
-    spawn: { detached: true, stdio: ["ignore"] },
+    spawn: { detached: true, stdio: ["ignore"], keepOpen: true },
   };
 
   var command = "echo test";

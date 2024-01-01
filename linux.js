@@ -198,7 +198,7 @@ function Spawn(instance, binary, end) {
     }
 
     if ((elevated && !detached) || (elevated && keepOpen)) {
-      end(null, response, null);
+      end(response);
     }
   });
 
@@ -212,7 +212,7 @@ function Spawn(instance, binary, end) {
     } else {
       message = PERMISSION_DENIED;
     }
-    end(new Error(message));
+    end(message);
   });
 
   if (detached) {
@@ -228,7 +228,7 @@ function Spawn(instance, binary, end) {
           if (i >= LIMIT) {
             clearTimeout(timerId);
             spawnRun.kill();
-            end(new Error(USER_PROMPT_TIMEOUT));
+            end(USER_PROMPT_TIMEOUT);
           } else {
             timerId = setTimeout(request, DELAY);
           }
@@ -237,7 +237,7 @@ function Spawn(instance, binary, end) {
           spawnRun.stdout.end();
           spawnRun.stderr.end();
           spawnRun.unref();
-          end(null, `Spawned child pid: ${spawnRun.pid}`, null);
+          end(`Spawned child pid: ${spawnRun.pid}`);
         }
       }
     }, DELAY);

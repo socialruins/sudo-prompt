@@ -27,9 +27,5 @@ export function spawn(
         env?: { [key: string]: string };
         spawn?: { [key: string]: any };
       },
-  callback?: (
-    error?: Error,
-    stdout?: string | Buffer,
-    stderr?: string | Buffer,
-  ) => void,
+  callback?: (response?: string | Buffer) => void,
 ): void;
